@@ -404,20 +404,48 @@ class ShopState(State):
                     price = joker_obj.price
                 else:
                     price = None
+
                 if price is None or price < 4 or price == 12:
                     if price:
+                        if self.playerInfo.playerMoney < price:
+                            print(
+                                f"[SHOP] buy: not enough money for {joker_obj.name}, "
+                                f"have={self.playerInfo.playerMoney}, price={price}"
+                            )
+                            self.joker_for_buy = None
+                            self.buy_rect = None
+                            self.selected_info = None
+                            return
+
                         self.playerInfo.playerMoney -= price
                         self.buy_sound.play()
+
                     if joker_obj in self.shop_random_jokers:
                         self.shop_random_jokers.remove(joker_obj)
                     else:
                         print(f"[SHOP] buy: {joker_obj.name} not present when activating")
+
                     self.activatePlanet(joker_obj)
                     if joker_obj is not None and joker_obj.name:
                         self.removed_offers.add(joker_obj.name)
-                    
+
                 else:
                     if self.playerInfo.playerMoney >= price and len(self.game_state.playerJokers) < 2:
+                        self.game_state.playerJokers.append(joker_obj.name)
+                        self.playerInfo.playerMoney -= price
+                        if joker_obj in self.shop_random_jokers:
+                            self.shop_random_jokers.remove(joker_obj)
+                        else:
+                            print(f"[SHOP] buy: purchased {joker_obj.name} not found in offers")
+                            self.buy_sound.play()
+                        self.buy_sound.play()
+                        if joker_obj is not None and joker_obj.name:
+                            self.removed_offers.add(joker_obj.name)
+                    else:
+                        print(
+                            f"[SHOP] buy: cannot afford or inv full; money={self.playerInfo.playerMoney}, "
+                            f"owned={len(self.game_state.playerJokers)}"
+                        )
                         self.game_state.playerJokers.append(joker_obj.name)
                         self.playerInfo.playerMoney -= price
                         if joker_obj in self.shop_random_jokers:
