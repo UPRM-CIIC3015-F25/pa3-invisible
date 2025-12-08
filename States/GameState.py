@@ -553,35 +553,35 @@ class GameState(State):
     #   Create a 'suitOrder' list (Hearts, Clubs, Diamonds, Spades), then use nested loops to compare each card
     #   with the ones after it. Depending on the mode, sort by rank first or suit first, swapping cards when needed
     #   until the entire hand is ordered correctly.
-def SortCards(self, sort_by: str = "suit"):
-        suitOrder = [Suit.HEARTS, Suit.CLUBS, Suit.DIAMONDS, Suit.SPADES]
-
-        def suit_idx(crd):
-            return suitOrder.index(crd.suit)
-
-        n = len(self.hand)
-        i = 0
-        while i < n:
-            j = i + 1
-            while j < n:
-                a = self.hand[i]
-                b = self.hand[j]
-
-                if sort_by == "rank":
-                    ka = (a.rank.value, suit_idx(a))
-                    kb = (b.rank.value, suit_idx(b))
-                else:
-                    ka = (suit_idx(a), a.rank.value)
-                    kb = (suit_idx(b), b.rank.value)
-
-                if kb < ka:
-                    tmp = self.hand[i]
-                    self.hand[i] = self.hand[j]
-                    self.hand[j] = tmp
-                j += 1
-            i += 1
-
-        self.updateCards(400, 520, self.cards, self.hand, scale=1.2)
+    def SortCards(self, sort_by: str = "suit"):
+            suitOrder = [Suit.HEARTS, Suit.CLUBS, Suit.DIAMONDS, Suit.SPADES]
+    
+            def suit_idx(crd):
+                return suitOrder.index(crd.suit)
+    
+            n = len(self.hand)
+            i = 0
+            while i < n:
+                j = i + 1
+                while j < n:
+                    a = self.hand[i]
+                    b = self.hand[j]
+    
+                    if sort_by == "rank":
+                        ka = (a.rank.value, suit_idx(a))
+                        kb = (b.rank.value, suit_idx(b))
+                    else:
+                        ka = (suit_idx(a), a.rank.value)
+                        kb = (suit_idx(b), b.rank.value)
+    
+                    if kb < ka:
+                        tmp = self.hand[i]
+                        self.hand[i] = self.hand[j]
+                        self.hand[j] = tmp
+                    j += 1
+                i += 1
+    
+            self.updateCards(400, 520, self.cards, self.hand, scale=1.2)
 
     def checkHoverCards(self):
         mousePos = pygame.mouse.get_pos()
@@ -807,7 +807,7 @@ def SortCards(self, sort_by: str = "suit"):
         #       self.activated_jokers.add("joker card name")
         #   The last line ensures the Joker is visibly active and its effects are properly applied.
 
-            procrastinate = False
+        procrastinate = False
 
         if "The Joker" in owned:
             hand_mult += 4
