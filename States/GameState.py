@@ -534,8 +534,37 @@ class GameState(State):
     #     - Recursive calculation of the overkill bonus (based on how much score exceeds the target)
     #     - A clear base case to stop recursion when all parts are done
     #   Avoid any for/while loops — recursion alone must handle the repetition.
-    def calculate_gold_reward(self, playerInfo, stage=0):
-            return 0
+    #   ...
+    def calculate_gold_reward(self, playerInfo, stage=0, acc=0):
+        cur_sub = playerInfo.levelManager.curSubLevel
+
+        if stage == 0:
+            base = 0
+            bl = getattr(cur_sub, "blind", None)
+            bl_nm = getattr(bl, "name", "")
+            if bl_nm == "SMALL":
+                base = 4
+            elif bl_nm == "BIG":
+                base = 8
+            elif bl_nm == "BOSS":
+                base = 10
+            return self.calculate_gold_reward(playerInfo, stage=1, acc=base)
+
+        if stage == 1:
+            sc = playerInfo.roundScore
+            tgt = getattr(cur_sub, "score", 0)
+            if tgt > 0:
+                diff = sc - tgt
+                rat = diff / tgt
+                bonus = rat * 5
+                if bonus < 0:
+                    bonus = 0
+                if bonus > 5:
+                    bonus = 5
+                acc += int(bonus)
+            return self.calculate_gold_reward(playerInfo, stage=2, acc=acc)
+
+        return acc
 
     def updateCards(self, posX, posY, cardsDict, cardsList, scale=1.5, spacing=90, baseYOffset=-20, leftShift=40):
         cardsDict.clear()
@@ -553,35 +582,35 @@ class GameState(State):
     #   Create a 'suitOrder' list (Hearts, Clubs, Diamonds, Spades), then use nested loops to compare each card
     #   with the ones after it. Depending on the mode, sort by rank first or suit first, swapping cards when needed
     #   until the entire hand is ordered correctly.
-    def SortCards(self, sort_by: str = "suit"):
-            suitOrder = [Suit.HEARTS, Suit.CLUBS, Suit.DIAMONDS, Suit.SPADES]
-    
-            def suit_idx(crd):
-                return suitOrder.index(crd.suit)
-    
-            n = len(self.hand)
-            i = 0
-            while i < n:
-                j = i + 1
-                while j < n:
-                    a = self.hand[i]
-                    b = self.hand[j]
-    
-                    if sort_by == "rank":
-                        ka = (a.rank.value, suit_idx(a))
-                        kb = (b.rank.value, suit_idx(b))
-                    else:
-                        ka = (suit_idx(a), a.rank.value)
-                        kb = (suit_idx(b), b.rank.value)
-    
-                    if kb < ka:
-                        tmp = self.hand[i]
-                        self.hand[i] = self.hand[j]
-                        self.hand[j] = tmp
-                    j += 1
-                i += 1
-    
-            self.updateCards(400, 520, self.cards, self.hand, scale=1.2)
+def SortCards(self, sort_by: str = "suit"):
+        suitOrder = [Suit.HEARTS, Suit.CLUBS, Suit.DIAMONDS, Suit.SPADES]
+
+        def suit_idx(crd):
+            return suitOrder.index(crd.suit)
+
+        n = len(self.hand)
+        i = 0
+        while i < n:
+            j = i + 1
+            while j < n:
+                a = self.hand[i]
+                b = self.hand[j]
+
+                if sort_by == "rank":
+                    ka = (a.rank.value, suit_idx(a))
+                    kb = (b.rank.value, suit_idx(b))
+                else:
+                    ka = (suit_idx(a), a.rank.value)
+                    kb = (suit_idx(b), b.rank.value)
+
+                if kb < ka:
+                    tmp = self.hand[i]
+                    self.hand[i] = self.hand[j]
+                    self.hand[j] = tmp
+                j += 1
+            i += 1
+
+        self.updateCards(400, 520, self.cards, self.hand, scale=1.2)
 
     def checkHoverCards(self):
         mousePos = pygame.mouse.get_pos()
