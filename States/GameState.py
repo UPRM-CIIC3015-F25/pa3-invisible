@@ -553,8 +553,34 @@ class GameState(State):
     #   Create a 'suitOrder' list (Hearts, Clubs, Diamonds, Spades), then use nested loops to compare each card
     #   with the ones after it. Depending on the mode, sort by rank first or suit first, swapping cards when needed
     #   until the entire hand is ordered correctly.
-    def SortCards(self, sort_by: str = "suit"):
-        suitOrder = [Suit.HEARTS, Suit.CLUBS, Suit.DIAMONDS, Suit.SPADES]         # Define the order of suits
+def SortCards(self, sort_by: str = "suit"):
+        suitOrder = [Suit.HEARTS, Suit.CLUBS, Suit.DIAMONDS, Suit.SPADES]
+
+        def suit_idx(crd):
+            return suitOrder.index(crd.suit)
+
+        n = len(self.hand)
+        i = 0
+        while i < n:
+            j = i + 1
+            while j < n:
+                a = self.hand[i]
+                b = self.hand[j]
+
+                if sort_by == "rank":
+                    ka = (a.rank.value, suit_idx(a))
+                    kb = (b.rank.value, suit_idx(b))
+                else:
+                    ka = (suit_idx(a), a.rank.value)
+                    kb = (suit_idx(b), b.rank.value)
+
+                if kb < ka:
+                    tmp = self.hand[i]
+                    self.hand[i] = self.hand[j]
+                    self.hand[j] = tmp
+                j += 1
+            i += 1
+
         self.updateCards(400, 520, self.cards, self.hand, scale=1.2)
 
     def checkHoverCards(self):
@@ -781,7 +807,65 @@ class GameState(State):
         #       self.activated_jokers.add("joker card name")
         #   The last line ensures the Joker is visibly active and its effects are properly applied.
 
-        procrastinate = False
+            procrastinate = False
+
+        if "The Joker" in owned:
+            hand_mult += 4
+            self.activated_jokers.add("The Joker")
+
+        if "Michael Myers" in owned:
+            extra_mm = random.randint(0, 23)
+            hand_mult += extra_mm
+            self.activated_jokers.add("Michael Myers")
+
+        if "Fibonacci" in owned:
+            fib_set = {Rank.ACE.value, Rank.TWO.value, Rank.THREE.value, Rank.FIVE.value, Rank.EIGHT.value}
+            cnt_fb = 0
+            for uc in used_cards:
+                if uc.rank.value in fib_set:
+                    cnt_fb += 1
+            hand_mult += cnt_fb * 8
+            if cnt_fb > 0:
+                self.activated_jokers.add("Fibonacci")
+
+        if "Gauntlet" in owned:
+            total_chips += 250
+            self.playerInfo.amountOfHands = max(0, self.playerInfo.amountOfHands - 2)
+            self.activated_jokers.add("Gauntlet")
+
+        if "Ogre" in owned:
+            j_ct = len(self.playerJokers)
+            hand_mult += j_ct * 3
+            self.activated_jokers.add("Ogre")
+
+        if "StrawHat" in owned:
+            h_ct = max(0, len(self.playedHandNameList) - 1)
+            bonus_sh = 100 - h_ct * 5
+            if bonus_sh > 0:
+                total_chips += bonus_sh
+            self.activated_jokers.add("StrawHat")
+
+        if "Hog Rider" in owned and hand_name == "Straight":
+            total_chips += 100
+            self.activated_jokers.add("Hog Rider")
+
+        if "? Block" in owned and len(sel) == 4:
+            total_chips += 4
+            self.activated_jokers.add("? Block")
+
+        if "Hogwarts" in owned:
+            ac_ct = 0
+            for uc in used_cards:
+                if uc.rank == Rank.ACE:
+                    ac_ct += 1
+            if ac_ct > 0:
+                hand_mult += ac_ct * 4
+                total_chips += ac_ct * 20
+                self.activated_jokers.add("Hogwarts")
+
+        if "802" in owned and self.playerInfo.amountOfHands == 0:
+            procrastinate = True
+            self.activated_jokers.add("802")
 
         # commit modified player multiplier and chips
         self.playerInfo.playerMultiplier = hand_mult
@@ -817,4 +901,38 @@ class GameState(State):
     #   recursion finishes, reset card selections, clear any display text or tracking lists, and
     #   update the visual layout of the player's hand.
     def discardCards(self, removeFromHand: bool):
-        self.updateCards(400, 520, self.cards, self.hand, scale=1.2)
+        if len(self.cardsSelectedList) == 0:
+            max_sz = 8
+            miss = max_sz - len(self.hand)
+            if miss > 0:
+                new_lst = State.deckManager.dealCards(
+                    self.deck,
+                    miss,
+                    self.playerInfo.levelManager.curSubLevel
+                )
+                for nc in new_lst:
+                    self.hand.append(nc)
+
+            self.cardsSelectedRect.clear()
+            for c in self.hand:
+                c.isSelected = False
+            self.playedHandName = ""
+            self.playerInfo.curHandOfPlayer = ""
+            self.playerInfo.curHandText = self.playerInfo.textFont1.render("", False, "white")
+
+            self.updateCards(400, 520, self.cards, self.hand, scale=1.2)
+            return
+
+        crd = self.cardsSelectedList.pop()
+        if removeFromHand and crd in self.hand:
+            if crd not in self.used:
+                self.used.append(crd)
+            self.hand.remove(crd)
+
+        crd.isSelected = False
+        if crd in self.cards:
+            self.cards[crd].y += 50
+
+        self.deselect_sfx.play()
+
+        self.discardCards(removeFromHand)
