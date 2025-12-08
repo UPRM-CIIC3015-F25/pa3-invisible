@@ -807,7 +807,7 @@ class GameState(State):
         #       self.activated_jokers.add("joker card name")
         #   The last line ensures the Joker is visibly active and its effects are properly applied.
 
-            procrastinate = False
+        procrastinate = False
 
         if "The Joker" in owned:
             hand_mult += 4
