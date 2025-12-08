@@ -843,4 +843,38 @@ def SortCards(self, sort_by: str = "suit"):
     #   recursion finishes, reset card selections, clear any display text or tracking lists, and
     #   update the visual layout of the player's hand.
     def discardCards(self, removeFromHand: bool):
-        self.updateCards(400, 520, self.cards, self.hand, scale=1.2)
+        if len(self.cardsSelectedList) == 0:
+            max_sz = 8
+            miss = max_sz - len(self.hand)
+            if miss > 0:
+                new_lst = State.deckManager.dealCards(
+                    self.deck,
+                    miss,
+                    self.playerInfo.levelManager.curSubLevel
+                )
+                for nc in new_lst:
+                    self.hand.append(nc)
+
+            self.cardsSelectedRect.clear()
+            for c in self.hand:
+                c.isSelected = False
+            self.playedHandName = ""
+            self.playerInfo.curHandOfPlayer = ""
+            self.playerInfo.curHandText = self.playerInfo.textFont1.render("", False, "white")
+
+            self.updateCards(400, 520, self.cards, self.hand, scale=1.2)
+            return
+
+        crd = self.cardsSelectedList.pop()
+        if removeFromHand and crd in self.hand:
+            if crd not in self.used:
+                self.used.append(crd)
+            self.hand.remove(crd)
+
+        crd.isSelected = False
+        if crd in self.cards:
+            self.cards[crd].y += 50
+
+        self.deselect_sfx.play()
+
+        self.discardCards(removeFromHand)
