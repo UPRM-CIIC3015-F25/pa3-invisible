@@ -459,8 +459,8 @@ class ShopState(State):
                         if joker_obj is not None and joker_obj.name:
                             self.removed_offers.add(joker_obj.name)
                         # Do not refill offers immediately after purchase.
-                    else:
-                        print(f"[SHOP] buy: cannot afford or inventory full: price={price}, money={self.playerInfo.playerMoney}, owned={len(self.game_state.playerJokers)}")
+                        else:
+                            print(f"[SHOP] buy: cannot afford or inventory full: price={price}, money={self.playerInfo.playerMoney}, owned={len(self.game_state.playerJokers)}")
                 self.joker_for_buy = None
                 self.buy_rect = None
                 self.selected_info = None
