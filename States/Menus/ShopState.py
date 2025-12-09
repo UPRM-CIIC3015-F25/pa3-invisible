@@ -442,29 +442,45 @@ class ShopState(State):
                         if joker_obj is not None and joker_obj.name:
                             self.removed_offers.add(joker_obj.name)
                     else:
-                        print(
-                            f"[SHOP] buy: cannot afford or inv full; money={self.playerInfo.playerMoney}, "
-                            f"owned={len(self.game_state.playerJokers)}"
-                        )
-                        self.game_state.playerJokers.append(joker_obj.name)
-                        self.playerInfo.playerMoney -= price
-                        if joker_obj in self.shop_random_jokers:
-                            self.shop_random_jokers.remove(joker_obj)
-                        else:
-                            print(f"[SHOP] buy: purchased {joker_obj.name} not found in offers")
+                        price = joker_obj.price
+
+                        can_afford = self.playerInfo.playerMoney >= price
+                        inventory_full = len(self.game_state.playerJokers) >= 2
+
+
+
+                        if can_afford and not inventory_full:
+
+
+                            self.game_state.playerJokers.append(joker_obj.name)
+                            self.playerInfo.playerMoney -= price
+
+                            if joker_obj in self.shop_random_jokers:
+                                self.shop_random_jokers.remove(joker_obj)
+                            else:
+                                print(f"[SHOP] buy: purchased {joker_obj.name} not found in offers (cleaned)")
+
                             self.buy_sound.play()
-                        # play buy sound for successful joker purchase
-                        self.buy_sound.play()
-                        # prevent this joker from being re-offered this session
-                        if joker_obj is not None and joker_obj.name:
                             self.removed_offers.add(joker_obj.name)
-                        # Do not refill offers immediately after purchase.
-                    else:
-                        print(f"[SHOP] buy: cannot afford or inventory full: price={price}, money={self.playerInfo.playerMoney}, owned={len(self.game_state.playerJokers)}")
-                self.joker_for_buy = None
-                self.buy_rect = None
-                self.selected_info = None
-                return
+                            print(
+                                f"[SHOP] Successfully bought {joker_obj.name}. Money left: {self.playerInfo.playerMoney}")
+
+                        else:
+
+                            if inventory_full:
+                                print(f"[SHOP] buy: Inventory full. Cannot purchase {joker_obj.name}.")
+                            elif not can_afford:
+                                print(
+                                    f"[SHOP] buy: Cannot afford {joker_obj.name}. "
+                                    f"Need {price}$, Have {self.playerInfo.playerMoney}$."
+                                )
+
+                        self.joker_for_buy = None
+                        self.buy_rect = None
+                        self.selected_info = None
+
+                    return
+
 
             # Clear temporary selections; we'll set a new selection below
             self.joker_for_sell = None
