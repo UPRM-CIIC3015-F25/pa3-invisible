@@ -101,7 +101,7 @@ class PlayerInfo(State):
             self.backgroundImage = pygame.image.load('Graphics/Backgrounds/gameplayBG.jpg')
             self.background = pygame.transform.scale(self.backgroundImage, (1300, 750))
         else:
-            self.backgroundImage = pygame.image.load('Graphics/Backgrounds/bossBG.png')
+            self.backgroundImage = pygame.image.load('graphics/backgrounds/Bosss/bos2.jpeg')
             self.background = pygame.transform.scale(self.backgroundImage, (1300, 750))
         self.draw() # draw the updated player info panel
 
